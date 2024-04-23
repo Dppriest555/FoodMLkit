@@ -11,7 +11,7 @@ import Home from "./App/screens/Home";
 import { CameraScreen } from './App/screens/CameraScreen';
 import NutriScreen from "./App/screens/Nutriscreen";
 import SavedFoods from "./App/screens/SavedFoods";
-//import ExpCameraScreen from './App/screens/ExpCameraScreen';
+import ExpCameraScreen from './App/screens/ExpCameraScreen';
 
 const Stack = createNativeStackNavigator();
 const Drawer = createDrawerNavigator();
@@ -23,7 +23,7 @@ function DrawerNavigation() {
       <Drawer.Screen name="Home" component={Home} />
       <Drawer.Screen name="CameraScreen" component={CameraScreen} />
       <Drawer.Screen name="Saved Foods" component={SavedFoods} />
-      {/* <Drawer.Screen name="ExpCameraScreen" component={ExpCameraScreen} /> */}
+      <Drawer.Screen name="ExpCameraScreen" component={ExpCameraScreen} />
     </Drawer.Navigator>
   );
 }
