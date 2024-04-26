@@ -7,7 +7,8 @@ import {
   useCameraPermission,
 } from 'react-native-vision-camera';
 import {NativeModules} from 'react-native';
-
+import { CameraRoll } from '@react-native-camera-roll/camera-roll';
+import { ScrollView } from 'react-native-gesture-handler';
 
 const {TextDetectionModule} = NativeModules;
 
@@ -24,35 +25,41 @@ const ExpCameraScreen = () => {
 
   useEffect(() => {
     handleCameraPermission();
+    console.log(TextDetectionModule);
   }, []);
-
-  useEffect(() => {
-    console.log('Camera device:', device);
-  }, [device]);
 
   const capturePhoto = async () => {
     if (cameraRef.current && cameraHasPermission) {
       try {
-        const photo = await cameraRef.current.takePhoto({
-          flash: 'off',
-          qualityPrioritization: 'speed',
-          enableAutoStabilization: true,
+        const photo = await cameraRef.current.takePhoto();
+        const rollPhoto = await CameraRoll.saveToCameraRoll(photo.path, {
+          type: 'photo',
         });
-        setImageUri(photo.path);
-        recognizeText(imageUri);
-        console.log(detectedText + "" + imageUri) 
+        console.log('Photo path:', rollPhoto)
+        setImageUri(rollPhoto.node.image.uri);
+        recognizeText(rollPhoto.node.image.uri);
+        console.log(detectedText, imageUri);
+        setTimeout(() => {
+          CameraRoll.deletePhotos([`file://media/external/file/test1`]);
+        }, 3000);
       } catch (error) {
         console.error('Failed to take photo:', error);
       }
     }
   };
-
   const recognizeText = async imagePath => {
+    if (!imagePath) return;
     try {
-      const text = await TextDetectionModule.recognizeImage(imagePath);
-      setDetectedText(text);
+      const result = await TextDetectionModule.recognizeImage(imagePath);
+      console.log('Result from Text Detection:', result);
+      if (result.blocks && result.blocks.length > 0) {
+        const text = result.blocks.map(block => block.text).join(' ');
+        setDetectedText(text);
+      } else {
+        setDetectedText('No text detected');
+      }
     } catch (error) {
-      console.error(error);
+      console.error('Error recognizing text:', error);
       setDetectedText('Failed to recognize text.');
     }
   };
@@ -86,22 +93,22 @@ const ExpCameraScreen = () => {
 
   return (
     <View style={styles.container}>
-      <>
-        <Camera
-          ref={cameraRef}
-          style={styles.camera}
-          device={device}
-          isActive={true}
-          photo={true}
-        />
-        <Button title="Capture" onPress={capturePhoto} />
-        {imageUri && (
-          <Text style={styles.instructions}>Image captured: {imageUri}</Text>
-        )}
-        {detectedText && (
-          <Text style={styles.instructions}>Detected Text: {detectedText}</Text>
-        )}
-      </>
+      <Camera
+        ref={cameraRef}
+        style={styles.camera}
+        device={device}
+        isActive={true}
+        photo={true}
+      />
+      <Button title="Capture" onPress={capturePhoto} />
+      <ScrollView>
+      {imageUri && (
+        <Text style={styles.instructions}>Image captured: {imageUri}</Text>
+      )}
+      {detectedText && (
+        <Text style={styles.instructions}>Detected Text: {detectedText}</Text>
+      )}
+      </ScrollView>
     </View>
   );
 };
@@ -120,7 +127,7 @@ const styles = StyleSheet.create({
   instructions: {
     fontSize: 18,
     margin: 10,
-    color: 'black'
+    color: 'black',
   },
 });
 
