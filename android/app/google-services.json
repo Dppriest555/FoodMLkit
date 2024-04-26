@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "910253028051",
+    "project_id": "barcode-scanner-bb3e4",
+    "storage_bucket": "barcode-scanner-bb3e4.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:910253028051:android:765fef260c90ef9a329a26",
+        "android_client_info": {
+          "package_name": "com.foodmlkit"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDvGx9wMa-PsEwj5gUpm3-7bn0zrntpKi0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

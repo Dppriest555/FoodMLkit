@@ -1,57 +1,107 @@
-import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Text, Alert, PermissionsAndroid, Platform, TouchableOpacity } from 'react-native';
-import { Camera } from 'react-native-vision-camera-v3-text-recognition';
-import { useCameraDevice, useCameraPermission } from 'react-native-vision-camera';
+// Import necessary modules
+import React, {useState, useEffect, useRef} from 'react';
+import {View, Text, StyleSheet, Button} from 'react-native';
+import {
+  Camera,
+  useCameraDevice,
+  useCameraPermission,
+} from 'react-native-vision-camera';
+import {NativeModules} from 'react-native';
 
-export function ExpCameraScreen(props) {
-  const [text, setText] = useState(null);
+
+const {TextDetectionModule} = NativeModules;
+
+const ExpCameraScreen = () => {
+  const [imageUri, setImageUri] = useState(null);
+  const [detectedText, setDetectedText] = useState('');
+  const {
+    hasPermission: cameraHasPermission,
+    requestPermission: requestCameraPermission,
+  } = useCameraPermission();
   const device = useCameraDevice('back');
-  const { hasPermission: cameraHasPermission, requestPermission: requestCameraPermission } = useCameraPermission();
+
+  const cameraRef = useRef(null);
 
   useEffect(() => {
-    const handleCameraPermission = async () => {
-      const granted = await requestCameraPermission();
-      if (!granted) {
-        Alert.alert(
-          'Permission required',
-          'Camera permission is required to use the camera. Please grant permission in your device settings.',
-          [{ text: 'OK', onPress: () => console.log('Permission dialog dismissed') }]
-        );
-      }
-    };
-
     handleCameraPermission();
-
-    const initCamera = async () => {
-      if (Platform.OS === 'android') {
-        console.log("KILL MEEEE");
-      }
-    };
-
-    initCamera();
   }, []);
 
-  if (device == null || !cameraHasPermission) {
-    return <View style={styles.container}><Text>Loading...</Text></View>;
-  }
+  useEffect(() => {
+    console.log('Camera device:', device);
+  }, [device]);
 
-  const logText = () => console.log(text);
+  const capturePhoto = async () => {
+    if (cameraRef.current && cameraHasPermission) {
+      try {
+        const photo = await cameraRef.current.takePhoto({
+          flash: 'off',
+          qualityPrioritization: 'speed',
+          enableAutoStabilization: true,
+        });
+        setImageUri(photo.path);
+        recognizeText(imageUri);
+        console.log(detectedText + "" + imageUri) 
+      } catch (error) {
+        console.error('Failed to take photo:', error);
+      }
+    }
+  };
+
+  const recognizeText = async imagePath => {
+    try {
+      const text = await TextDetectionModule.recognizeImage(imagePath);
+      setDetectedText(text);
+    } catch (error) {
+      console.error(error);
+      setDetectedText('Failed to recognize text.');
+    }
+  };
+
+  const handleCameraPermission = async () => {
+    const granted = await requestCameraPermission();
+
+    if (!granted) {
+      Alert.alert(
+        'Permission required',
+        'Camera permission is required to use the camera. Please grant permission in your device settings.',
+        [
+          {
+            text: 'OK',
+            onPress: () => console.log('Permission dialog dismissed'),
+          },
+        ],
+      );
+      // Optionally, you can use Linking API to open the App Settings
+      // Linking.openSettings();
+    }
+  };
+
+  if (device == null || !cameraHasPermission) {
+    return (
+      <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+        <Text style={{margin: 10}}>Camera Not Found or Permission Denied</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
-      <Camera
-        // frameProcessor={null}
-        device={device}
-        style={StyleSheet.absoluteFill}
-        isActive={true}
-        options={{ language: "latin" }}
-        callback={(data) => setText(data)}
-        {...props}
-      />
-      {/* <Text style={styles.textOutput}>{text ? text : 'No text recognized yet'}</Text> */}
-      <TouchableOpacity style={styles.button} onPress={logText}>
-        <Text>PRESS</Text>
-      </TouchableOpacity>
+      <>
+        <Camera
+          ref={cameraRef}
+          style={styles.camera}
+          device={device}
+          isActive={true}
+          photo={true}
+        />
+        <Button title="Capture" onPress={capturePhoto} />
+        {imageUri && (
+          <Text style={styles.instructions}>Image captured: {imageUri}</Text>
+        )}
+        {detectedText && (
+          <Text style={styles.instructions}>Detected Text: {detectedText}</Text>
+        )}
+      </>
     </View>
   );
 };
@@ -61,25 +111,17 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#fff'
+    backgroundColor: '#fff',
   },
-  textOutput: {
-    position: 'absolute',
-    bottom: 20,
-    left: 20,
-    right: 20,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    color: 'white',
-    padding: 10,
-    borderRadius: 5,
-    textAlign: 'center'
+  camera: {
+    width: '100%',
+    height: '80%',
   },
-  button: {
-    padding: 10,
+  instructions: {
+    fontSize: 18,
     margin: 10,
-    backgroundColor: 'blue',
-    color: 'white'
-  }
+    color: 'black'
+  },
 });
 
 export default ExpCameraScreen;
