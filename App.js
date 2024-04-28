@@ -19,7 +19,7 @@ const Drawer = createDrawerNavigator();
 // Drawer Navigation for logged in user
 function DrawerNavigation() {
   return (
-    <Drawer.Navigator >
+    <Drawer.Navigator screenOptions={{headerTransparent: true}} >
       <Drawer.Screen name="Home" component={Home} />
       <Drawer.Screen name="CameraScreen" component={CameraScreen} />
       <Drawer.Screen name="Saved Foods" component={SavedFoods} />

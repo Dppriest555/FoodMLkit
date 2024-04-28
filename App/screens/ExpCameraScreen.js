@@ -35,18 +35,20 @@ const ExpCameraScreen = () => {
         const rollPhoto = await CameraRoll.saveToCameraRoll(photo.path, {
           type: 'photo',
         });
-        console.log('Photo path:', rollPhoto)
+        const fileURI = 'file:///storage/emulated/0/Pictures/'+`${rollPhoto.node.image.filename}`;
+        console.log('FileName:', fileURI)
         setImageUri(rollPhoto.node.image.uri);
         recognizeText(rollPhoto.node.image.uri);
         console.log(detectedText, imageUri);
         setTimeout(() => {
-          CameraRoll.deletePhotos([`file://media/external/file/test1`]);
-        }, 3000);
+           CameraRoll.deletePhotos([fileURI]);
+         }, 3000);
       } catch (error) {
         console.error('Failed to take photo:', error);
       }
     }
   };
+
   const recognizeText = async imagePath => {
     if (!imagePath) return;
     try {
