@@ -6,13 +6,18 @@ import {
   useCameraDevice,
   useCameraPermission,
 } from 'react-native-vision-camera';
+import { useNavigation, useRoute } from "@react-navigation/native";
 import {NativeModules} from 'react-native';
 import { CameraRoll } from '@react-native-camera-roll/camera-roll';
 import { ScrollView } from 'react-native-gesture-handler';
+import { User, FIREBASE_AUTH, DB } from "../../FirebaseConfig";
+import { onAuthStateChanged } from "firebase/auth";
+import { collection, doc, setDoc, updateDoc, Timestamp  } from "firebase/firestore";
 
 const {TextDetectionModule} = NativeModules;
 
 const ExpCameraScreen = () => {
+  const [user, setUser] = useState(null);
   const [imageUri, setImageUri] = useState(null);
   const [detectedText, setDetectedText] = useState('');
   const {
@@ -21,11 +26,19 @@ const ExpCameraScreen = () => {
   } = useCameraPermission();
   const device = useCameraDevice('back');
 
+  const route = useRoute(); // Use the useRoute hook to access the route object
+  const  {foodDocRef}  = route.params;
+
   const cameraRef = useRef(null);
 
   useEffect(() => {
+    onAuthStateChanged(FIREBASE_AUTH, (user) => {
+      setUser(user);
+      return () => unsubscribe();
+    });
     handleCameraPermission();
     console.log(TextDetectionModule);
+
   }, []);
 
   const capturePhoto = async () => {
@@ -49,7 +62,7 @@ const ExpCameraScreen = () => {
     }
   };
 
-  const recognizeText = async imagePath => {
+  const recognizeText = async (imagePath) => {
     if (!imagePath) return;
     try {
       const result = await TextDetectionModule.recognizeImage(imagePath);
@@ -57,6 +70,18 @@ const ExpCameraScreen = () => {
       if (result.blocks && result.blocks.length > 0) {
         const text = result.blocks.map(block => block.text).join(' ');
         setDetectedText(text);
+        try {
+          const event = new Date("2024-05-06");
+          console.log(event.toISOString());
+          const userRef = await updateDoc(doc(DB, "User", `${user.email}`, "DigitalFridge", `${foodDocRef}`), {
+            testText: 'hello',
+            expDate: Timestamp.fromDate(event)
+          });
+          console.log('Product Saved to Database as:', foodDocRef,);
+          alert('Product Saved!');
+        } catch (error) {
+          console.error("Error adding product!", error);
+        }
       } else {
         setDetectedText('No text detected');
       }

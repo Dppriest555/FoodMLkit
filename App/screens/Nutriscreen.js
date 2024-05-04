@@ -35,6 +35,23 @@ export default function NutriScreen() {
   }
   }
 
+  const beginExpExtraction = async () => {
+    try{
+    const userCollection = collection(DB, "Users");
+    const userRef = await setDoc(doc(DB , "User", `${user.email}`, "DigitalFridge", `${productName}` ),{
+      productName: productName,
+    });
+    //const foodRef = await setDoc(doc(DB, "Users", `${user.email}`, "Saved Foods",`${productName}`))
+    console.log('Product Saved to Database as: ' + productName)
+    alert('Product Saved!')
+    navigation.navigate("ExpCameraScreen", {
+      foodDocRef: productName,
+    });
+  }catch(error){
+    console.error("Error adding product!", error)
+  }
+  }
+
   useEffect(() => {
     onAuthStateChanged(FIREBASE_AUTH, (user) => {
       setUser(user);
@@ -151,6 +168,12 @@ export default function NutriScreen() {
         onPress={HandleSaveFoodItem}
       >
         <Text style={styles.saveButtonText}>SAVE FOOD ITEM</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={[styles.saveButton, styles.shadowProp]}
+        onPress={beginExpExtraction}
+      >
+        <Text style={styles.saveButtonText}>SCAN EXPIRATION DATE</Text>
       </TouchableOpacity>
     </View>
     /*

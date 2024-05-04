@@ -1,10 +1,33 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {View, Text, StyleSheet, Button, Image, TouchableOpacity} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import {getAuth, signOut} from 'firebase/auth';
+import messaging from '@react-native-firebase/messaging';
 
 const Home = () => {
   const navigation = useNavigation();
+  
+
+  async function requestUserPermission() {
+    const authStatus = await messaging().requestPermission();
+    const enabled =
+      authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+      authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+  
+    if (enabled) {
+      console.log('Authorization status:', authStatus);
+    }
+  }
+
+  const getToken = async () => {
+    const token = await messaging().getToken()
+    console.log("Token = " + token)
+  }
+  
+  useEffect(() => {
+    requestUserPermission();
+    getToken();
+  }, [])
 
   const auth = getAuth();
   const logout = () => {
@@ -30,7 +53,7 @@ const Home = () => {
           scan.
         </Text>
         <TouchableOpacity
-          style={[styles.saveButton, styles.shadowProp]}
+          style={[styles.saveButton, styles.shadowPropButton]}
           onPress={() => navigation.navigate('CameraScreen')}>
           <Text style={styles.saveButtonText}>SAVE FOOD ITEM</Text>
         </TouchableOpacity>
@@ -63,6 +86,10 @@ const styles = StyleSheet.create({
     textShadowRadius: 10,
     textShadowOffset: {width: -0.3, height: 4},
   },
+  shadowPropButton: {
+      elevation: 4,
+      shadowColor: 'rgba(0, 0, 0, 0.50)',
+  },
   subtitle: {
     fontSize: 16,
     textAlign: 'center',
@@ -72,7 +99,7 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     backgroundColor: "#E59500",
-    borderRadius: 30,
+    borderRadius: 10,
     alignItems: "center",
     marginBottom: 30,
     height: 40,

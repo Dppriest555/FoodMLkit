@@ -8,6 +8,7 @@ import {
   Text,
   TouchableOpacity,
   View,
+  ActivityIndicator
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
@@ -20,6 +21,7 @@ import { formatWifiData, getCountryFromBarcode, openExternalLink } from '../../s
 
 export function CameraScreen({ navigation }) {
   const [torchOn, setTorchOn] = useState(false);
+  const [isLoading, setIsLoading] = useState(false); // State to track loading state
   const [enableOnCodeScanned, setEnableOnCodeScanned] = useState(true);
   const {
     hasPermission: cameraHasPermission,
@@ -36,27 +38,45 @@ export function CameraScreen({ navigation }) {
   }, [device]);
 
   const codeScanner = useCodeScanner({
-    codeTypes: ['qr', 'ean-13'],
-    onCodeScanned: codes => {
+    codeTypes: ['qr', 'ean-13','code-128','code-39','code-93', 'codabar', 'ean-8', 'upc-a', 'upc-e'],
+    onCodeScanned: async codes => {
+      setIsLoading(true);
       if (enableOnCodeScanned && codes.length > 0) {
         let value = codes[0]?.value;
         let type = codes[0]?.type;
-
-        console.log(codes[0]);
-        if (type === 'qr') {
-          openExternalLink(value).catch(error => {
-            showAlert('Detail', formatWifiData(value), false);
+        try {
+          console.log(value, type, codes,)
+          const response = await fetch(`https://world.openfoodfacts.org/api/v2/product/${value}?fields=product_name,code,allergens,ingredients_hierarchy,nutriments`, {
+            method: "GET", // or 'POST'
+            headers: {
+              "User-Agent": "food_scanner/1.0 (ivan.velkov01@abv.bg)",
+            },
           });
-        } else {
-          const countryOfOrigin = getCountryFromBarcode(value);
-
-          console.log(`Country of Origin for ${value}: ${countryOfOrigin}`);
-          showAlert(value, countryOfOrigin);
+          const data = await response.json();
+          console.log(data)
+          setIsLoading(false);
+          if (data.status == 1) {
+            navigation.navigate("NutriScreen", {
+              response_data: data,
+            });
+          } else {
+            alert("No such product found in the database")
+          }
+        } catch (error) {
+          console.error('Error:', error);
         }
         setEnableOnCodeScanned(false);
       }
     },
   });
+
+  if (isLoading) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color="#BA2C73" />
+      </View>
+    );
+  }
 
   const handleCameraPermission = async () => {
     const granted = await requestCameraPermission();
@@ -74,36 +94,6 @@ export function CameraScreen({ navigation }) {
     }
   };
 
-  const showAlert = (value = '', countryOfOrigin = '', showMoreBtn = true) => {
-    Alert.alert(
-      value,
-      countryOfOrigin,
-      showMoreBtn
-        ? [
-            {
-              text: 'Cancel',
-              onPress: () => console.log('Cancel Pressed'),
-              style: 'cancel',
-            },
-            {
-              text: 'More',
-              onPress: () => {
-                setTorchOn(false);
-                setEnableOnCodeScanned(true);
-                openExternalLink('https://www.barcodelookup.com/' + value);
-              },
-            },
-          ]
-        : [
-            {
-              text: 'Cancel',
-              onPress: () => setEnableOnCodeScanned(true),
-              style: 'cancel',
-            },
-          ],
-      { cancelable: false },
-    );
-  };
 
   const RoundButtonWithImage = () => {
     return (
