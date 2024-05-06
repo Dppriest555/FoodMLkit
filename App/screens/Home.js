@@ -1,33 +1,40 @@
-import React, { useEffect } from 'react';
-import {View, Text, StyleSheet, Button, Image, TouchableOpacity} from 'react-native';
+import React, {useEffect} from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Button,
+  Image,
+  TouchableOpacity,
+} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import {getAuth, signOut} from 'firebase/auth';
 import messaging from '@react-native-firebase/messaging';
 
 const Home = () => {
   const navigation = useNavigation();
-  
 
   async function requestUserPermission() {
     const authStatus = await messaging().requestPermission();
     const enabled =
       authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
       authStatus === messaging.AuthorizationStatus.PROVISIONAL;
-  
+
     if (enabled) {
       console.log('Authorization status:', authStatus);
     }
   }
 
   const getToken = async () => {
-    const token = await messaging().getToken()
-    console.log("Token = " + token)
-  }
-  
+    const token = await messaging().getToken();
+    console.log('Token = ' + token);
+  };
+
   useEffect(() => {
     requestUserPermission();
     getToken();
-  }, [])
+
+  }, []);
 
   const auth = getAuth();
   const logout = () => {
@@ -87,8 +94,8 @@ const styles = StyleSheet.create({
     textShadowOffset: {width: -0.3, height: 4},
   },
   shadowPropButton: {
-      elevation: 4,
-      shadowColor: 'rgba(0, 0, 0, 0.50)',
+    elevation: 4,
+    shadowColor: 'rgba(0, 0, 0, 0.50)',
   },
   subtitle: {
     fontSize: 16,
@@ -98,17 +105,17 @@ const styles = StyleSheet.create({
     padding: 15,
   },
   saveButton: {
-    backgroundColor: "#E59500",
+    backgroundColor: '#E59500',
     borderRadius: 10,
-    alignItems: "center",
+    alignItems: 'center',
     marginBottom: 30,
     height: 40,
-    justifyContent: "center",
-    width: '80%'
+    justifyContent: 'center',
+    width: '80%',
   },
   saveButtonText: {
-    color: "#F5F5F5",
-    fontWeight: "bold",
+    color: '#F5F5F5',
+    fontWeight: 'bold',
     fontSize: 18,
   },
   footer: {
@@ -118,7 +125,7 @@ const styles = StyleSheet.create({
     top: 10,
     borderRadius: 20,
     height: 200,
-    width: '90%'
+    width: '90%',
   },
 });
 

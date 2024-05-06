@@ -14,8 +14,6 @@ const SavedFoods = () => {
       setUser(currentUser);
       if (currentUser && currentUser.email) {
         fetchFoodData(currentUser.email);
-        const event = new Date("2024-05-04");
-        console.log(event.toISOString());
       }
     });
 

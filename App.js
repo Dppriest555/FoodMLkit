@@ -12,6 +12,7 @@ import { CameraScreen } from './App/screens/CameraScreen';
 import NutriScreen from "./App/screens/Nutriscreen";
 import SavedFoods from "./App/screens/SavedFoods";
 import ExpCameraScreen from './App/screens/ExpCameraScreen';
+import useCheckExpirations from './App/hooks/ExpirationCheck';
 
 const Stack = createNativeStackNavigator();
 const Drawer = createDrawerNavigator();
@@ -30,6 +31,7 @@ function DrawerNavigation() {
 
 export default function App() {
   const [user, setUser] = useState(null);
+  useCheckExpirations();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(FIREBASE_AUTH, (user) => {
