@@ -62,7 +62,12 @@ const Home = () => {
         <TouchableOpacity
           style={[styles.saveButton, styles.shadowPropButton]}
           onPress={() => navigation.navigate('CameraScreen')}>
-          <Text style={styles.saveButtonText}>SAVE FOOD ITEM</Text>
+          <Text style={styles.saveButtonText}>SCAN BARCODE</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.saveButton, styles.shadowPropButton]}
+          onPress={logout}>
+          <Text style={styles.saveButtonText}>log out</Text>
         </TouchableOpacity>
         {/* <Button title="Log Out" onPress={logout} color="#007BFF" /> */}
       </View>

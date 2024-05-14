@@ -17,7 +17,6 @@ import {
   useCameraPermission,
   useCodeScanner,
 } from 'react-native-vision-camera';
-import { formatWifiData, getCountryFromBarcode, openExternalLink } from '../../src/utils';
 
 export function CameraScreen({ navigation }) {
   const [torchOn, setTorchOn] = useState(false);
@@ -32,10 +31,6 @@ export function CameraScreen({ navigation }) {
   useEffect(() => {
     handleCameraPermission();
   }, []);
-
-  useEffect(() => {
-    console.log('Camera device:', device);
-  }, [device]);
 
   const codeScanner = useCodeScanner({
     codeTypes: ['qr', 'ean-13','code-128','code-39','code-93', 'codabar', 'ean-8', 'upc-a', 'upc-e'],
@@ -63,7 +58,7 @@ export function CameraScreen({ navigation }) {
             alert("No such product found in the database")
           }
         } catch (error) {
-          console.error('Error:', error);
+          console.error('Camera Error:', error);
         }
         setEnableOnCodeScanned(false);
       }

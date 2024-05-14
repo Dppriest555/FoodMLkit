@@ -1,64 +1,81 @@
-import { StyleSheet, View, Text, TouchableOpacity, Image } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { useNavigation, useRoute } from "@react-navigation/native";
-import { useState, useEffect } from "react";
-import { collection, doc, setDoc, addDoc } from "firebase/firestore";
-import { User, FIREBASE_AUTH, DB } from "../../FirebaseConfig";
-import { onAuthStateChanged } from "firebase/auth";
-
+import {StyleSheet, View, Text, TouchableOpacity, Image} from 'react-native';
+import {SafeAreaView} from 'react-native-safe-area-context';
+import {useNavigation, useRoute} from '@react-navigation/native';
+import {useState, useEffect} from 'react';
+import {collection, doc, setDoc, addDoc} from 'firebase/firestore';
+import {User, FIREBASE_AUTH, DB} from '../../FirebaseConfig';
+import {onAuthStateChanged} from 'firebase/auth';
 
 export default function NutriScreen() {
-  const [activeTab, setActiveTab] = useState("ingredients");
+  const [activeTab, setActiveTab] = useState('ingredients');
   const [user, setUser] = useState(User);
 
   const navigation = useNavigation();
   const route = useRoute(); // Use the useRoute hook to access the route object
-  const { response_data } = route.params;
+  const {response_data} = route.params;
 
   const productName = response_data.product.product_name;
-  const allergens = response_data.product.allergens.replace("en:", ""); // Removing the 'en:' prefix for display
-  const nutri = response_data.product.nutriments["energy-kcal"];
+  // Existing code where you define allergens
+  const allergens = response_data.product.allergens.split(',').map(allergen =>
+    allergen.trim().replace("en:", "")
+  );
+  const nutri = response_data.product.nutriments['energy-kcal'];
+
+  // Define an object that maps allergens to their image files
+  const allergenImages = {
+    gluten: require('../../assets/images/gluten.png'),
+    eggs: require('../../assets/images/eggs.png'),
+    milk: require('../../assets/images/milk.png'),
+    // Add more mappings as needed
+  };
+  allergenImages.default = require('../../assets/images/eggs.png');
 
   const HandleSaveFoodItem = async () => {
-    try{
-    const userCollection = collection(DB, "Users");
-    const userRef = await setDoc(doc(DB , "User", `${user.email}`, "FoodItems", `${productName}` ),{
-      productName: productName,
-      nutrients: response_data.product.nutriments,
-      allergens: allergens,
-    });
-    //const foodRef = await setDoc(doc(DB, "Users", `${user.email}`, "Saved Foods",`${productName}`))
-    console.log('Product Saved to Database as: ' + productName)
-    alert('Product Saved!')
-  }catch(error){
-    console.error("Error adding product!", error)
-  }
-  }
+    try {
+      const userCollection = collection(DB, 'Users');
+      const userRef = await setDoc(
+        doc(DB, 'User', `${user.email}`, 'FoodItems', `${productName}`),
+        {
+          productName: productName,
+          nutrients: response_data.product.nutriments,
+          allergens: allergens,
+        },
+      );
+      //const foodRef = await setDoc(doc(DB, "Users", `${user.email}`, "Saved Foods",`${productName}`))
+      console.log('Product Saved to Database as: ' + productName);
+      alert('Product Saved!');
+    } catch (error) {
+      console.error('Error adding product!', error);
+    }
+  };
 
   const beginExpExtraction = async () => {
-    try{
-    const userCollection = collection(DB, "Users");
-    const userRef = await setDoc(doc(DB , "User", `${user.email}`, "DigitalFridge", `${productName}` ),{
-      productName: productName,
-    });
-    //const foodRef = await setDoc(doc(DB, "Users", `${user.email}`, "Saved Foods",`${productName}`))
-    console.log('Product Saved to Database as: ' + productName)
-    alert('Product Saved!')
-    navigation.navigate("ExpCameraScreen", {
-      foodDocRef: productName,
-    });
-  }catch(error){
-    console.error("Error adding product!", error)
-  }
-  }
+    try {
+      const userCollection = collection(DB, 'Users');
+      const userRef = await setDoc(
+        doc(DB, 'User', `${user.email}`, 'DigitalFridge', `${productName}`),
+        {
+          productName: productName,
+        },
+      );
+      //const foodRef = await setDoc(doc(DB, "Users", `${user.email}`, "Saved Foods",`${productName}`))
+      console.log('Product Saved to Database as: ' + productName);
+      alert('Product Saved!');
+      navigation.navigate('ExpCameraScreen', {
+        foodDocRef: productName,
+      });
+    } catch (error) {
+      console.error('Error adding product!', error);
+    }
+  };
 
   useEffect(() => {
-    onAuthStateChanged(FIREBASE_AUTH, (user) => {
+    onAuthStateChanged(FIREBASE_AUTH, user => {
       setUser(user);
+      console.log(allergens);
       return () => unsubscribe();
     });
   }, []);
-
 
   return (
     <View style={styles.container}>
@@ -66,57 +83,46 @@ export default function NutriScreen() {
         <SafeAreaView style={[styles.headerContainer, styles.shadowProp]}>
           <Text style={styles.headerText}>{productName}</Text>
           <View style={styles.tabContainer}>
-          <TouchableOpacity
-            style={[
-              styles.tab,
-              activeTab === "ingredients" && styles.activeTab,
-            ]}
-            onPress={() => setActiveTab("ingredients")}
-          >
-            <Text style={styles.tabText}>Ingredients</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.tab,
-              activeTab === "detailedView" && styles.activeTab,
-            ]}
-            onPress={() => setActiveTab("detailedView")}
-          >
-            <Text style={styles.tabText}>Detailed View</Text>
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.tab,
+                activeTab === 'ingredients' && styles.activeTab,
+              ]}
+              onPress={() => setActiveTab('ingredients')}>
+              <Text style={styles.tabText}>Ingredients</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.tab,
+                activeTab === 'detailedView' && styles.activeTab,
+              ]}
+              onPress={() => setActiveTab('detailedView')}>
+              <Text style={styles.tabText}>Detailed View</Text>
+            </TouchableOpacity>
           </View>
         </SafeAreaView>
       </View>
-      {activeTab === "ingredients" && (
+      {activeTab === 'ingredients' && (
         <View style={styles.body}>
           <View style={[styles.bodyContainer, styles.shadowProp]}>
             <View style={styles.allergensSection}>
               <Text style={styles.allergensLabel}>Allergens</Text>
               <View style={styles.allergensList}>
-                <View style={styles.allergenItem}>
-                  <Image
-                    source={require("../../assets/images/gluten.png")}
-                    style={styles.icon}
-                  />
-                  <Text>Gluten</Text>
-                </View>
-                <View style={styles.allergenItem}>
-                  <Image
-                    source={require("../../assets/images/eggs.png")}
-                    style={styles.icon}
-                  />
-                  <Text>Eggs</Text>
-                </View>
-                <View style={styles.allergenItem}>
-                  <Image
-                    source={require("../../assets/images/milk.png")}
-                    style={styles.icon}
-                  />
-                  <Text>Milk</Text>
-                </View>
+                {allergens.map((allergen, index) => (
+                  <View key={index} style={styles.allergenItem}>
+                    <Image
+                      source={
+                        allergenImages[allergen] || allergenImages.default
+                      } // Fallback to a default image if allergen is not mapped
+                      style={styles.icon}
+                    />
+                    <Text style={[styles.allergenText]}>
+                      {allergen.charAt(0).toUpperCase() + allergen.slice(1)}
+                    </Text>
+                  </View>
+                ))}
               </View>
             </View>
-
             <View style={styles.ingredientsSection}>
               <Text style={styles.ingredientsLabel}>Ingredients</Text>
               <View style={styles.ingredientsList}>
@@ -156,7 +162,7 @@ export default function NutriScreen() {
           </View>
         </View>
       )}
-      {activeTab === "detailedView" && (
+      {activeTab === 'detailedView' && (
         <View style={styles.contentContainer}>
           {/* Content for Detailed View tab */}
           <Text>Detailed View content goes here...</Text>
@@ -165,14 +171,12 @@ export default function NutriScreen() {
 
       <TouchableOpacity
         style={[styles.saveButton, styles.shadowProp]}
-        onPress={HandleSaveFoodItem}
-      >
+        onPress={HandleSaveFoodItem}>
         <Text style={styles.saveButtonText}>SAVE FOOD ITEM</Text>
       </TouchableOpacity>
       <TouchableOpacity
         style={[styles.saveButton, styles.shadowProp]}
-        onPress={beginExpExtraction}
-      >
+        onPress={beginExpExtraction}>
         <Text style={styles.saveButtonText}>SCAN EXPIRATION DATE</Text>
       </TouchableOpacity>
     </View>
@@ -197,13 +201,13 @@ export default function NutriScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#E8E8E8",
-    justifyContent: "space-between",
-    alignItems: "center",
+    backgroundColor: '#E8E8E8',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   header: {
-    backgroundColor: "#E59500",
-    width: "100%",
+    backgroundColor: '#E59500',
+    width: '100%',
     height: 130,
     borderBottomLeftRadius: 25,
     borderBottomRightRadius: 25,
@@ -211,26 +215,28 @@ const styles = StyleSheet.create({
   },
   headerContainer: {
     marginTop: 40,
-    alignSelf: "center",
-    justifyContent: "center",
-    width: "90%",
+    alignSelf: 'center',
+    justifyContent: 'center',
+    width: '90%',
     height: 140,
     borderRadius: 15,
-    backgroundColor: "#F7F7F7",
+    backgroundColor: '#F7F7F7',
   },
   shadowProp: {
     elevation: 10,
-    shadowColor: "#2A2B2E",
+    shadowColor: '#2A2B2E',
   },
   headerText: {
-    textAlign: "center",
-    fontWeight: "bold",
+    textAlign: 'center',
+    fontWeight: 'bold',
     fontSize: 20,
+    color: 'black',
   },
   tabContainer: {
     justifyContent: 'space-around',
     flexDirection: 'row',
-    marginTop: 15
+    marginTop: 15,
+    color: 'black',
   },
   activeTab: {
     borderBottomWidth: 2,
@@ -238,13 +244,13 @@ const styles = StyleSheet.create({
   },
   body: {
     padding: 20,
-    width: "100%",
+    width: '100%',
   },
   bodyContainer: {
     borderRadius: 15,
-    width: "90%",
-    alignSelf: "center",
-    backgroundColor: "#F7F7F7",
+    width: '90%',
+    alignSelf: 'center',
+    backgroundColor: '#F7F7F7',
     marginTop: 30,
     padding: 6,
   },
@@ -252,19 +258,22 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   allergensLabel: {
-    alignSelf: "center",
-    fontWeight: "bold",
+    alignSelf: 'center',
+    fontWeight: 'bold',
     fontSize: 16,
-    color: "#3D3E43",
+    color: '#3D3E43',
   },
   allergensList: {
-    flexDirection: "row",
-    justifyContent: "space-around",
+    flexDirection: 'row',
+    justifyContent: 'space-around',
     marginTop: 20,
     marginTop: 20,
   },
   allergenItem: {
-    alignItems: "center",
+    alignItems: 'center',
+  },
+  allergenText: {
+    color: 'black',
   },
   icon: {
     width: 50,
@@ -274,54 +283,55 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   ingredientsLabel: {
-    alignSelf: "center",
-    fontWeight: "bold",
+    alignSelf: 'center',
+    fontWeight: 'bold',
     fontSize: 16,
-    color: "#3D3E43",
+    color: '#3D3E43',
   },
   ingredientsList: {
-    flexDirection: "row",
-    justifyContent: "space-around",
+    flexDirection: 'row',
+    justifyContent: 'space-around',
     marginTop: 10,
   },
   ingredientItem: {
     flex: 1,
-    flexDirection: "column",
-    justifyContent: "space-around",
-    alignItems: "center",
-    backgroundColor: "#E8E8E8",
+    flexDirection: 'column',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    backgroundColor: '#E8E8E8',
     borderRadius: 50,
     height: 110,
     margin: 8,
-    borderColor: "black",
+    borderColor: 'black',
     borderWidth: 1,
   },
   ingredientText: {
-    fontWeight: "bold",
+    fontWeight: 'bold',
+    color: 'black',
   },
   saveButton: {
-    backgroundColor: "#E59500",
+    backgroundColor: '#E59500',
     borderRadius: 30,
-    width: "80%",
-    alignItems: "center",
+    width: '80%',
+    alignItems: 'center',
     marginBottom: 30,
     height: 40,
-    justifyContent: "center",
+    justifyContent: 'center',
   },
   saveButtonText: {
-    color: "#F5F5F5",
-    fontWeight: "bold",
+    color: '#F5F5F5',
+    fontWeight: 'bold',
     fontSize: 18,
   },
   ingredientNumberC: {
-    backgroundColor: "#81C5F6",
+    backgroundColor: '#81C5F6',
     width: 45,
     height: 55,
     borderRadius: 30,
-    borderColor: "black",
+    borderColor: 'black',
     borderWidth: 1,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
     marginTop: 5,
   },
 });
