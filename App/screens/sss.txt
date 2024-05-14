@@ -1,0 +1,73 @@
+ // Helper functions to extract, parse, and format dates
+  function extractDates(text) {
+    const datePatterns = [
+      /\b(\d{1,2})[\/](\d{1,2})[\/](\d{4})\b/g, // MM/DD/YYYY or DD/MM/YYYY
+      /\b(\d{1,2})[\/\-](\d{4})\b/g, // MM/YYYY
+      /\b(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})\b/g, // YYYY/MM/DD
+      /\b(\d{8})\b/g, // MMDDYYYY
+      /\b(\d{1,2})[\.](\d{1,2})(\d{4})\b/g, // DD.MMYYYY with potential noise
+      /^\d{2}\.\d{2}\.\d{4}$/, //dd.MM.yyyy
+      /\b(\d{1,2}) (\d{1,2}) (\d{4})\b/g, // DD MM YYYY
+      /\b(\d{1,2})[\.](\d{1,2})[\.]\ (\d{4})\b/g,   // DD.MM. YYYY
+      /\b(\d{1,2})[-](\d{1,2})[-](\d{4})\b/g        //DD-MM-YYYY
+    ]; 
+
+    let matches,
+      dates = [];
+    datePatterns.forEach(pattern => {
+      while ((matches = pattern.exec(text))) {
+        dates.push(matches[0]);
+      }
+    });
+    console.log("Dates =" ,dates)
+    return dates;
+  }
+
+  function parseDates(dates) {
+    const dateFormatMap = [
+      {regex: /\b(\d{1,2})[\/](\d{1,2})[\/](\d{4})\b/g, format: 'MM/dd/yyyy'  },
+      { regex: /^\d{1,2}\/\d{1,2}\/\d{4}$/, format: 'dd/MM/yyyy' },
+      {regex: /^\d{1,2}\/\d{4}$/, format: 'MM/yyyy'},
+      {regex: /^\d{4}\/\d{1,2}\/\d{1,2}$/, format: 'yyyy/MM/dd'},
+      {regex: /^\d{8}$/, format: 'MMddyyyy'},
+      {regex: /^\d{1,2}\.\d{6}$/, format: 'dd.MMyyyy'},
+      {regex: /^\d{2}\.\d{2}\.\d{4}$/, format: 'dd.MM.yyyy'}, // Add this new format
+      {regex: /^\d{1,2} \d{1,2} \d{4}$/, format: 'dd MM yyyy'},
+      {regex: /\b(\d{1,2})[\.](\d{1,2})[\.]\ (\d{4})\b/g, format: 'dd.MM. yyyy'}, // New pattern added7
+      {regex: /\b(\d{1,2})[-](\d{1,2})[-](\d{4})\b/g, format: 'dd-MM-yyyy'} // New pattern added7
+      
+    ];
+
+    return dates
+      .map(dateStr => {
+        const dateFormat = dateFormatMap.find(fmt => fmt.regex.test(dateStr));
+        if (dateFormat) {
+          try {
+            return parse(dateStr, dateFormat.format, new Date());
+          } catch (e) {
+            console.error('Failed to parse date:', dateStr, e);
+          }
+        }
+        return null;
+      })
+      .filter(date => date); // Filter out nulls
+  }
+
+  function processText(text) {
+    const dates = extractDates(text);
+    const parsedDates = parseDates(dates);
+    const formattedDates = parsedDates.map(date => format(date, 'yyyy/MM/dd'));
+
+    // Return the latest date
+    return formattedDates.sort((a, b) => new Date(b) - new Date(a))[0];
+  }
+
+  // const textResponse = '07-02-2025';
+  // const extractedDates = extractDates(textResponse);
+  // console.log('Extracted dates:', extractedDates);
+
+  // const parsedDates = parseDates(extractedDates);
+  // console.log(
+  //   'Parsed dates:',
+  //   parsedDates.map(date => format(date, 'yyyy/MM/dd')),
+  // );

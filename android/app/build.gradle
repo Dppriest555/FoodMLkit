@@ -114,6 +114,12 @@ dependencies {
     } else {
         implementation jscFlavor
     }
-}
+    implementation 'com.google.android.gms:play-services-mlkit-text-recognition:19.0.0'
+    implementation 'com.google.firebase:firebase-messaging'
+    implementation 'com.google.firebase:firebase-analytics'
 
+
+
+}
+apply plugin: 'com.google.gms.google-services'
 apply from: file("../../node_modules/@react-native-community/cli-platform-android/native_modules.gradle"); applyNativeModulesAppBuildGradle(project)
